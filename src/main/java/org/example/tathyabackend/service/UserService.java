@@ -1,9 +1,11 @@
 package org.example.tathyabackend.service;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.example.tathyabackend.dtos.UserRegisterDto;
 
-import java.util.Date;
 
 public interface UserService {
-    public  String registerUser(UserRegisterDto userRegisterDto);
+     String registerUser(UserRegisterDto userRegisterDto);
+    String login(String email, String password, HttpServletResponse response);
+    void logout(HttpServletResponse response);
 }
