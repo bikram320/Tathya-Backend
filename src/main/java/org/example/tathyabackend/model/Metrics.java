@@ -1,5 +1,6 @@
 package org.example.tathyabackend.model;
 
+
 public class Metrics {
 
     private Metric depthOfReporting;
