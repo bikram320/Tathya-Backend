@@ -60,7 +60,9 @@ public class SecurityConfig {
                 .and()
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/home/**", "/users/register", "/users/login").permitAll()
+                        .requestMatchers("/home/**", "/users/register", "/users/login",
+                                "/news/get"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
