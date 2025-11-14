@@ -9,5 +9,6 @@ public class UserRegisterDto {
     private String name;
     private String email;
     private String password;
+    private String confirmPassword;
     private Date dateOfBirth;
 }

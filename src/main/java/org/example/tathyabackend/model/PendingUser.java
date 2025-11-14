@@ -9,9 +9,9 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Table(name = "pending_users")
 @NoArgsConstructor
-public class User {
+public class PendingUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,8 +29,5 @@ public class User {
 
     @Column(nullable = false , name = "date_of_birth")
     private Date dateOfBirth;
-
-    @Column(nullable = false , name = "isemail_verified")
-    private boolean isEmailVerified;
 
 }
