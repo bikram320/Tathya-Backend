@@ -33,4 +33,13 @@ public class User {
     @Column(nullable = false , name = "isemail_verified")
     private boolean isEmailVerified;
 
+    @Column(name = "kyc_document_path")
+    private String kycDocumentPath;
+
+    @Column(name = "kyc_doc_uploaded_at")
+    private Date kycDocUploadedAt;
+
+    @Column(nullable = false , name = "iskyc_verified")
+    private boolean isKycVerified;
+
 }

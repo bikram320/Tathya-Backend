@@ -1,6 +1,7 @@
 package org.example.tathyabackend.controller;
 
 import lombok.AllArgsConstructor;
+import org.example.tathyabackend.dtos.VoteCountResponse;
 import org.example.tathyabackend.dtos.VoteRequest;
 import org.example.tathyabackend.dtos.VoteResponse;
 import org.example.tathyabackend.service.VoteService;
@@ -40,5 +41,10 @@ public class VoteController {
                     }
             );
         }
+    }
+    @GetMapping("/get-vote-count")
+    public ResponseEntity<VoteCountResponse> getVoteCount(@RequestParam String newsId,
+                                                          @RequestParam String metric) {
+        return ResponseEntity.ok(voteService.getVoteCount(newsId, metric));
     }
 }

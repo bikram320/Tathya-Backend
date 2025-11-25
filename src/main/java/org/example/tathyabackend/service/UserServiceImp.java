@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.example.tathyabackend.dtos.UserDto;
 import org.example.tathyabackend.dtos.UserRegisterDto;
 import org.example.tathyabackend.dtos.VerifyOtpRequest;
 import org.example.tathyabackend.exception.UserNotFoundException;
@@ -12,10 +13,15 @@ import org.example.tathyabackend.model.User;
 import org.example.tathyabackend.repository.PendingUserRepository;
 import org.example.tathyabackend.repository.UserRepository;
 import org.example.tathyabackend.util.JwtUtil;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
@@ -27,6 +33,7 @@ public class UserServiceImp implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final PendingUserRepository pendingUserRepository;
     private final MailService mailService;
+    private final AuthenticationManager authenticationManager;
 
 
     @Transactional
@@ -71,7 +78,7 @@ public class UserServiceImp implements UserService {
             User newUser = new User();
             newUser.setName(pendingUser.getName());
             newUser.setEmail(pendingUser.getEmail());
-            newUser.setPassword(String.valueOf(passwordEncoder.encode(pendingUser.getPassword())));
+            newUser.setPassword(pendingUser.getPassword());
             newUser.setDateOfBirth(pendingUser.getDateOfBirth());
             newUser.setEmailVerified(true);
             userRepository.save(newUser);
@@ -85,23 +92,44 @@ public class UserServiceImp implements UserService {
 
     @Override
     public String login(String email, String password, HttpServletResponse response) {
+
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
+            String token = jwtUtil.generateToken(email);
+
+            // set cookie (HttpOnly)
+            Cookie cookie = new Cookie("jwt", token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge((int) (jwtUtil.getJwtExpirationMs() / 1000));
+            response.addCookie(cookie);
+
+            return token;
+        } catch (BadCredentialsException e) {
+            return "Invalid credentials";
+        }
+    }
+
+    @Override
+    public String verifyKycEmail(String email, MultipartFile valid_doc) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new UserNotFoundException("User not found with email: " + email);
         }
-        if(!passwordEncoder.matches(password, user.getPassword())){
-            throw new BadCredentialsException("Invalid credentials");
+        user.setKycDocumentPath(valid_doc.getOriginalFilename());
+        userRepository.save(user);
+        return "KYC verification successful";
+    }
+
+    @Override
+    public UserDto getBasicUserInfo(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with id: " + id);
         }
-        String token = jwtUtil.generateToken(email);
-
-        // set cookie (HttpOnly)
-        Cookie cookie = new Cookie("jwt", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge((int) (jwtUtil.getJwtExpirationMs() / 1000));
-        response.addCookie(cookie);
-
-        return token;
+        return new UserDto(user.getId() , user.getName(), user.getEmail(), user.getDateOfBirth());
     }
 
 
@@ -112,5 +140,23 @@ public class UserServiceImp implements UserService {
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
+    }
+
+    @Override
+    public boolean isKycVerified(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+        return user.isKycVerified();
+    }
+
+    @Override
+    public long getIdByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+        return user.getId();
     }
 }

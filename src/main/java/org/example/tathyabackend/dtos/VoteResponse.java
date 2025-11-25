@@ -3,7 +3,7 @@ package org.example.tathyabackend.dtos;
 import lombok.Data;
 
 @Data
-public class VoteResponse {
+public class    VoteResponse {
     public String status;
     public int value;
 

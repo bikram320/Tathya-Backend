@@ -41,6 +41,10 @@ public class News {
 
     private String summary;
 
+    private Integer bias;
+
+    private Double normalizedBias;
+
 
     public News() {
     }

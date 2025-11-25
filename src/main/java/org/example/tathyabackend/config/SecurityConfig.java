@@ -53,18 +53,20 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter,
                                                    DaoAuthenticationProvider authenticationProvider) throws Exception {
+
         http
-                .authenticationProvider(authenticationProvider) // register auth provider
+                .authenticationProvider(authenticationProvider)
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors()
                 .and()
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/home/**", "/users/login",
-                                "/users/register", "/users/**",
-                                "/news/get").permitAll()
-                        .requestMatchers("/votes/**").authenticated()  // ← Require auth for votes
-                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/vote/**",
+                                "/comment/**"
+                        ).authenticated()   // ONLY THESE REQUIRE LOGIN
+
+                        .anyRequest().permitAll()   // EVERYTHING ELSE IS PUBLIC
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> {
@@ -75,7 +77,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

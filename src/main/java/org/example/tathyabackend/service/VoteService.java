@@ -2,8 +2,11 @@ package org.example.tathyabackend.service;
 
 import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
+import org.example.tathyabackend.dtos.VoteCountResponse;
 import org.example.tathyabackend.exception.InvalidNewsException;
 import org.example.tathyabackend.exception.InvalidValueException;
+import org.example.tathyabackend.model.Metric;
+import org.example.tathyabackend.model.Metrics;
 import org.example.tathyabackend.model.Vote;
 import org.example.tathyabackend.repository.NewsRepository;
 import org.example.tathyabackend.repository.VoteRepository;
@@ -141,5 +144,32 @@ public class VoteService {
     private boolean looksLikeObjectId(String id) {
         // quick hex length check (24 hex chars)
         return id != null && id.length() == 24 && id.matches("^[0-9a-fA-F]{24}$");
+    }
+    public VoteCountResponse getVoteCount(String newsId, String metric) {
+        int upvotes = 0;
+        int downvotes = 0;
+
+        var newsOpt = newsRepository.findById(newsId);
+        if (newsOpt.isPresent()) {
+            Metrics metrics = newsOpt.get().getMetrics();
+            if (metrics != null) {
+                Metric m1 = null;
+                if(metric.equals("credibility")){
+                    m1 = metrics.getCredibility();
+                } else if(metric.equals("depthOfReporting")){
+                    m1 = metrics.getDepthOfReporting();
+                } else if(metric.equals("politicalBiasness")){
+                    m1 = metrics.getPoliticalBiasness();
+                } else if(metric.equals("relevance")){
+                    m1 = metrics.getRelevance();
+                }
+                if (m1 != null) {
+                    upvotes = m1.getUpvote();
+                    downvotes = m1.getDownvote();
+                }
+            }
+        }
+
+        return new VoteCountResponse(upvotes, downvotes);
     }
 }
